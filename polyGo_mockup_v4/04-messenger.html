@@ -1,0 +1,982 @@
+﻿<!DOCTYPE html>
+<html lang="pl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>polyGo — Wiadomości</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+
+/* ── TOKENS ────────────────────────────────────────────────── */
+:root{
+  --bg:#fff;--bg2:#f0f3f7;--bg3:#e5eaf1;
+  --fg:#111;--fg2:#555;--fg3:#999;
+  --bd:#e4e4e4;--bd2:#ccc;
+  --p:hsl(196 82% 40%);--pl:hsl(196 65% 92%);--pd:hsl(196 82% 28%);
+  --g:hsl(142 45% 40%);--gl:hsl(142 40% 95%);
+  --rv:hsl(0 52% 48%);--rl:hsl(0 50% 96%);
+  --av:hsl(38 65% 44%);--al:hsl(38 65% 95%);
+  --th:48px;--sw:224px;--db:36px;
+  --r:12px;--r-sm:6px;
+  --sn-bg:#0e1e2c;--sn-fg:#94afc7;--sn-on:#ffffff;
+  --shadow:0 1px 3px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.07);
+}
+[data-theme=dark]{
+  --bg:#141414;--bg2:#1d1d1d;--bg3:#262626;
+  --fg:#e8e8e8;--fg2:#888;--fg3:#555;
+  --bd:#2a2a2a;--bd2:#3a3a3a;
+  --p:hsl(196 75% 52%);--pl:hsl(196 55% 12%);--pd:hsl(196 75% 62%);
+  --g:hsl(142 45% 52%);--gl:hsl(142 40% 10%);
+  --rv:hsl(0 52% 60%);--rl:hsl(0 50% 10%);
+  --av:hsl(38 65% 55%);--al:hsl(38 65% 10%);
+}
+
+/* ── RESET ─────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg2);color:var(--fg);line-height:1.5}
+button{cursor:pointer;font:inherit;border:none;background:none}
+a{text-decoration:none;color:inherit}
+input{font:inherit}
+svg{display:block;flex-shrink:0;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── TOP BAR ────────────────────────────────────────────────── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:var(--th);
+  background:var(--bg);border-bottom:1px solid var(--bd);box-shadow:0 1px 4px rgba(0,0,0,.06);
+  display:flex;align-items:center;z-index:100;
+}
+.tb-brand{width:var(--sw);flex-shrink:0;height:100%;font-size:15px;font-weight:500;letter-spacing:-.02em;color:var(--fg);display:flex;align-items:center;padding:0 16px;}
+.tb-brand em{color:var(--p);font-style:normal}
+.tb-search{flex:1;max-width:400px;display:flex;align-items:center;gap:8px;margin:0 16px;border:1px solid var(--bd);background:var(--bg2);padding:5px 10px;border-radius:var(--r-sm)}
+.tb-search svg{width:13px;height:13px;color:var(--fg3);flex-shrink:0;stroke-width:2}
+.tb-search input{border:none;background:none;outline:none;font-size:13px;color:var(--fg);width:100%}
+.tb-search input::placeholder{color:var(--fg3)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:2px;padding-right:16px}
+.tb-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--fg2);position:relative;transition:background .1s,color .1s;}
+.tb-btn:hover{background:var(--bg2);color:var(--fg)}
+.tb-btn svg{width:16px;height:16px;stroke-width:1.5}
+.tb-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--rv);border-radius:50%;border:1.5px solid var(--bg)}
+.tb-av{width:28px;height:28px;background:var(--p);color:#fff;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:6px;flex-shrink:0;letter-spacing:.04em;border-radius:50%}
+[data-theme=light] .i-sun{display:none}
+[data-theme=dark]  .i-moon{display:none}
+
+/* ── SIDE NAV ───────────────────────────────────────────────── */
+.sidenav{position:fixed;top:var(--th);left:0;bottom:0;width:var(--sw);background:var(--bg);box-shadow:2px 0 6px rgba(0,0,0,.05);display:flex;flex-direction:column;overflow-y:auto;z-index:90;padding-bottom:var(--db)}
+.sn-sec{padding:14px 10px 6px}
+.sn-lbl{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--fg2);padding:0 8px 6px;display:block}
+.nav-link{display:flex;align-items:center;gap:8px;padding:7px 8px;color:var(--fg2);font-size:13px;transition:background .12s,color .12s;margin:1px 0}
+.nav-link:hover{background:var(--bg2);color:var(--fg)}
+.nav-link.on{color:var(--p);background:var(--pl);font-weight:500}
+.nav-link.dim{opacity:.35;pointer-events:none}
+.nav-link svg{width:14px;height:14px;flex-shrink:0;stroke-width:1.5;opacity:.7}
+.nav-link.on svg{opacity:1;color:var(--p)}
+.nav-link:hover svg{opacity:1}
+.nb{margin-left:auto;background:var(--rv);color:#fff;font-size:10px;padding:0 5px;min-width:16px;text-align:center;font-weight:500}
+.ns{margin-left:auto;font-size:9px;font-weight:500;color:var(--av);background:var(--al);padding:1px 5px;letter-spacing:.03em;text-transform:uppercase;border:1px solid hsl(38 60% 84%)}
+[data-theme=dark] .ns{border-color:hsl(38 60% 25%)}
+.sn-div{height:1px;background:var(--bd);margin:6px 10px}
+.sn-foot{margin-top:auto;border-top:1px solid var(--bd)}
+.sn-user{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;transition:background .12s}
+.sn-user:hover{background:var(--bg2)}
+.sn-uname{font-size:12px;font-weight:500;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sn-uco{font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── APP LAYOUT ─────────────────────────────────────────────── */
+.body-wrap{margin-top:var(--th);margin-left:var(--sw);min-height:calc(100vh - var(--th));padding-bottom:var(--db);transition:margin-right .22s}
+html.panel-open .body-wrap{margin-right:300px}
+
+/* ── PAGE HEADER ────────────────────────────────────────────── */
+.page-head{padding:24px 28px 20px;display:flex;align-items:flex-end;justify-content:space-between}
+.pg-eye{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--p);margin-bottom:3px}
+.pg-ttl{font-size:20px;font-weight:600;color:var(--fg);letter-spacing:-.025em;line-height:1.2}
+.pg-sub{font-size:12px;color:var(--fg3);margin-top:2px}
+.pg-acts{display:flex;gap:8px;align-items:center}
+
+/* ── BUTTONS ────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s,transform .12s;border:none;white-space:nowrap;border-radius:var(--r-sm)}
+.btn-pri{background:var(--p);color:#fff;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.btn-pri:hover{background:var(--pd);box-shadow:0 3px 8px rgba(0,0,0,.22);transform:translateY(-1px)}
+.btn-sec{background:var(--bg);color:var(--fg);border:1px solid var(--bd2);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.btn-sec:hover{background:var(--bg2);box-shadow:0 2px 4px rgba(0,0,0,.1)}
+.btn-gst{background:none;color:var(--p);border:1px solid var(--p)}
+.btn-gst:hover{background:var(--pl);border-color:var(--pd)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn svg{width:13px;height:13px;stroke-width:1.5}
+
+/* ── TAGS ───────────────────────────────────────────────────── */
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 7px;border:1px solid var(--bd);color:var(--fg2);background:var(--bg2);white-space:nowrap;flex-shrink:0;border-radius:var(--r-sm)}
+.tag-p{background:var(--pl);color:var(--p);border-color:hsl(196 55% 82%)}
+[data-theme=dark] .tag-p{border-color:hsl(196 55% 20%)}
+
+/* ── MAIN CONTENT ───────────────────────────────────────────── */
+.pg-content{padding:20px 28px}
+
+/* ── CONVERSATION TABLE ─────────────────────────────────────── */
+.conv-section{margin-bottom:20px}
+.conv-sec-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--bg)}
+.conv-sec-ttl{font-size:14px;font-weight:600;color:var(--fg)}
+.conv-sec-cnt{font-size:11px;color:var(--fg3)}
+.conv-tab{border:1px solid var(--bd);background:var(--bg);border-radius:var(--r);box-shadow:0 1px 4px rgba(0,0,0,.07);overflow:hidden}
+.ct-head{
+  display:grid;grid-template-columns:2fr 3fr 80px 90px;
+  padding:9px 20px;background:var(--bg);border-bottom:1px solid var(--bd);
+  font-size:11px;font-weight:500;color:var(--fg2);
+}
+.ct-row{
+  display:grid;grid-template-columns:2fr 3fr 80px 90px;
+  padding:13px 20px;
+  align-items:center;cursor:pointer;transition:background .1s;position:relative;
+}
+.ct-row::after{content:'';position:absolute;bottom:0;left:20px;right:20px;height:1px;background:var(--bd)}
+.ct-row:last-child::after{display:none}
+.ct-row:hover{background:var(--bg2)}
+.ct-row.unread .ct-preview{color:var(--fg2);font-weight:500}
+.ct-cell{display:flex;align-items:center;gap:10px;min-width:0}
+.ct-av{
+  width:34px;height:34px;
+  font-size:10px;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.04em;
+  border-radius:50%;
+}
+.ct-info{min-width:0}
+.ct-person{font-size:13px;font-weight:500;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
+.ct-co{font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.ct-preview{font-size:12px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ct-time{font-size:11px;color:var(--fg3)}
+.ct-row.unread .ct-time{color:var(--fg2);font-weight:500}
+.ct-status{display:flex;align-items:center;gap:6px}
+.ct-unread{
+  width:18px;height:18px;background:var(--rv);color:#fff;
+  font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+}
+.ct-open-tag{font-size:10px;color:var(--p);background:var(--pl);border:1px solid hsl(196 55% 82%);padding:1px 6px;white-space:nowrap;border-radius:var(--r-sm)}
+[data-theme=dark] .ct-open-tag{border-color:hsl(196 55% 20%)}
+.ct-arch-badge{font-size:10px;color:var(--fg3);background:var(--bg3);border:1px solid var(--bd);padding:1px 6px;white-space:nowrap;border-radius:var(--r-sm)}
+
+/* Archive table — slightly dimmer */
+.conv-tab.arch .ct-row{opacity:.8}
+.conv-tab.arch .ct-row:hover{opacity:1;background:var(--bg2)}
+
+/* ── DEMO BAR ────────────────────────────────────────────────── */
+.demo-bar{position:fixed;bottom:0;left:0;right:0;height:var(--db);background:var(--bg);border-top:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;z-index:200}
+.dm-mark{font-size:10px;font-weight:500;color:var(--fg3);margin-right:16px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+.dm-lnk{font-size:12px;color:var(--fg3);padding:3px 11px;border-right:1px solid var(--bd);transition:color .1s,background .1s}
+.dm-lnk:first-of-type{border-left:1px solid var(--bd)}
+.dm-lnk:hover{color:var(--fg);background:var(--bg2)}
+.dm-lnk.on{color:var(--p);font-weight:500}
+
+/* ── MESSENGER RIGHT PANEL ──────────────────────────────────── */
+.msg-panel{position:fixed;top:var(--th);right:0;bottom:var(--db);width:300px;background:var(--bg);border-left:1px solid var(--bd);box-shadow:-3px 0 10px rgba(0,0,0,.06);z-index:88;transform:translateX(300px);transition:transform .22s;display:flex;flex-direction:column;overflow:hidden}
+.msg-panel.open{transform:translateX(0)}
+.mp-head{padding:11px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;background:var(--bg2);flex-shrink:0}
+.mp-ttl{font-size:12px;font-weight:600;color:var(--fg);flex:1;letter-spacing:.01em}
+.mp-close{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--fg3);cursor:pointer;background:none;border:none;padding:0}
+.mp-close:hover{color:var(--fg)}
+.mp-close svg{width:14px;height:14px;stroke-width:2}
+.mp-search{padding:8px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:6px;flex-shrink:0;background:var(--bg)}
+.mp-search svg{width:12px;height:12px;stroke-width:2;color:var(--fg3);flex-shrink:0}
+.mp-search input{border:none;background:none;outline:none;font-size:12px;color:var(--fg);width:100%}
+.mp-search input::placeholder{color:var(--fg3)}
+.mp-list{flex:1;overflow-y:auto}
+.mp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .1s}
+.mp-item:hover{background:var(--bg2)}
+.mp-av{width:32px;height:32px;background:var(--bg3);font-size:10px;font-weight:600;color:var(--fg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.03em;border-radius:50%}
+.mp-body{flex:1;min-width:0}
+.mp-name{font-size:12px;font-weight:500;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-sub{font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.mp-badge{font-size:10px;font-weight:600;background:var(--rv);color:#fff;padding:1px 5px;min-width:16px;text-align:center;flex-shrink:0;border-radius:2px}
+.mp-open-tag{font-size:10px;color:var(--p);background:var(--pl);border:1px solid hsl(196 55% 82%);padding:1px 6px;flex-shrink:0;white-space:nowrap;border-radius:var(--r-sm)}
+[data-theme=dark] .mp-open-tag{border-color:hsl(196 55% 20%)}
+.mp-full{display:block;padding:10px 12px;font-size:12px;color:var(--p);text-align:center;border-top:1px solid var(--bd);cursor:pointer;text-decoration:none}
+.mp-full:hover{background:var(--bg2)}
+
+/* ── FLOATING CHAT TRAY ─────────────────────────────────────── */
+.conv-tray{position:fixed;bottom:var(--db);right:16px;display:flex;gap:8px;align-items:flex-end;z-index:95;pointer-events:none}
+html.panel-open .conv-tray{right:316px}
+.conv-mini-dock{position:fixed;bottom:var(--db);right:16px;display:flex;gap:5px;align-items:flex-end;z-index:97;pointer-events:none}
+html.panel-open .conv-mini-dock{right:316px}
+.conv-mini-dock .cw,.cw{pointer-events:all}
+.cw{width:284px;height:500px;border-radius:10px 10px 0 0;border:none;box-shadow:0 8px 28px rgba(0,0,0,.18);overflow:visible;position:relative;background:var(--bg);display:flex;flex-direction:column}
+.cw.min{height:34px;overflow:hidden}
+#convDock .cw{width:284px!important;height:52px!important;overflow:hidden!important;border-radius:8px 8px 0 0!important;cursor:pointer}
+
+/* ── CHAT REDESIGN ──────────────────────────────────────────── */
+.conv-tray{bottom:calc(var(--db) + 60px)!important}
+.cw{border-radius:0!important;box-shadow:0 6px 28px rgba(0,0,0,.24)}
+#convDock .cw{border-radius:0!important}
+.cw-head{padding:12px 8px 12px 12px!important;background:var(--bg)!important;height:auto!important;border-bottom:1px solid var(--bd);border-top:3px solid var(--cw-color,var(--p));flex-shrink:0;cursor:pointer;user-select:none}
+.cw-head-row{display:flex;align-items:center;gap:6px;width:100%}
+.cw-logo{width:32px;height:32px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.05em;border-radius:50%;background:var(--cw-color,var(--p))}
+.cw-info{flex:1;min-width:0}
+.cw-cname{font-size:12px;font-weight:700;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3;display:flex;align-items:center;gap:5px}
+.cw-cco{font-size:10px;color:var(--fg2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cw-cph{font-size:9.5px;color:var(--fg3);margin-top:1px}
+.cw-online{width:6px;height:6px;background:#4ade80;border-radius:50%;flex-shrink:0}
+.cw-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--fg3);background:none;border:none;cursor:pointer;flex-shrink:0;padding:0;border-radius:5px}
+.cw-btn:hover{color:var(--fg);background:var(--bg3)}
+.cw-btn svg{width:12px;height:12px;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cw-info-pop{position:absolute;bottom:100%;left:0;right:0;background:var(--bg);border:1px solid var(--bd);box-shadow:0 -6px 20px rgba(0,0,0,.14);padding:14px;z-index:200}
+.cw-ip-head{display:flex;align-items:center;gap:9px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--bd)}
+.cw-ip-av{width:34px;height:34px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:7px}
+.cw-ip-name{font-size:12px;font-weight:600;color:var(--fg);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cw-ip-type{font-size:10px;color:var(--fg3);margin-top:2px}
+.cw-ip-star{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);background:none;cursor:pointer;color:var(--fg3);border-radius:4px;flex-shrink:0;padding:0;margin-left:auto}
+.cw-ip-star:hover{border-color:hsl(38 65% 70%);color:hsl(38 65% 50%)}
+.cw-ip-star.on{border-color:hsl(38 65% 78%);background:hsl(38 65% 96%);color:hsl(38 65% 44%)}
+.cw-ip-star svg{width:11px;height:11px;stroke-width:1.8}
+.cw-ip-star.on svg{fill:hsl(38 65% 50%);stroke:hsl(38 65% 50%)}
+.cw-ip-row{display:flex;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--bd);gap:8px}
+.cw-ip-row:last-child{border-bottom:none}
+.cw-ip-k{width:72px;flex-shrink:0;font-size:10px;color:var(--fg3);font-weight:500}
+.cw-ip-v{font-size:11px;color:var(--fg);font-weight:500}
+.cw-body{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:8px;background:#f0f2f5}
+[data-theme=dark] .cw-body{background:var(--bg2)}
+.cw-row{display:flex;align-items:flex-end;gap:6px}
+.cw-row.mine{flex-direction:row-reverse}
+.cw-bav{width:24px;height:24px;font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;background:var(--cw-color,var(--p))}
+.cw-row.mine .cw-bav{background:var(--p)!important}
+.cw-bubble{max-width:190px;padding:8px 12px;font-size:12px;line-height:1.5}
+.cw-row:not(.mine) .cw-bubble{background:#fff;color:var(--fg);border-radius:2px 14px 14px 14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.cw-row.mine .cw-bubble{background:var(--cw-color,var(--p));color:#fff;border-radius:14px 2px 14px 14px}
+.cw-ts{font-size:9px;color:var(--fg3);white-space:nowrap;padding-bottom:3px;flex-shrink:0}
+.cw-empty{text-align:center;color:rgba(0,0,0,.28);font-size:11px;padding:28px 12px;line-height:1.7}
+.cw-footer{padding:6px 8px!important;gap:5px!important;height:60px!important;display:flex;align-items:center;background:#fff;border-top:1px solid var(--bd);flex-shrink:0}
+[data-theme=dark] .cw-footer{background:var(--bg)}
+.cw-fl{display:flex;flex-direction:column;flex-shrink:0;gap:2px}
+.cw-fl .cw-icon-btn{width:23px;height:23px}
+.cw-icon-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:var(--fg3);padding:0;flex-shrink:0;border-radius:4px;transition:color .12s,background .12s}
+.cw-icon-btn:hover{color:var(--fg2);background:var(--bg2)}
+.cw-icon-btn svg{width:15px;height:15px;stroke-width:1.8;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.cw-dots-svg circle{fill:currentColor;stroke:none}
+.cw-input{flex:1;border:1px solid #dde1e7;background:#f0f2f5;padding:7px 13px;font-size:12px;color:var(--fg);outline:none;font-family:inherit;border-radius:0!important;transition:border-color .15s,background .15s}
+.cw-input:focus{border-color:var(--cw-color,var(--p));background:#fff}
+.cw-input::placeholder{color:var(--fg3)}
+.cw-send{width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0;border-radius:50%;background:var(--p)!important;transition:opacity .12s}
+.cw-send:hover{opacity:.85}
+.cw-send svg{fill:white!important;stroke:none!important;width:14px!important;height:14px!important}
+.cw-infolink{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border:none;background:none;cursor:pointer;color:var(--cw-color,var(--p));padding:0;flex-shrink:0;margin-left:3px;opacity:.75;vertical-align:middle}
+.cw-infolink:hover{opacity:1}
+.cw-infolink svg{width:12px;height:12px}
+.cw-acts{display:flex;gap:2px;flex-shrink:0;margin-left:2px}
+
+/* ── DATE & CALENDAR ──────────────────────── */
+.tb-date-grp{display:flex;align-items:center;gap:2px;padding-right:14px;margin-right:12px;border-right:1px solid var(--bd)}
+.tb-date-txt{font-size:11.5px;color:var(--fg2);font-weight:500;white-space:nowrap;letter-spacing:-.01em}
+.cal-pop{position:fixed;z-index:500;background:var(--bg);border:1px solid var(--bd2);box-shadow:0 8px 24px rgba(0,0,0,.14);padding:14px 12px 12px;width:230px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-month{font-size:12px;font-weight:600;color:var(--fg)}
+.cal-nav{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:var(--fg3);border-radius:4px;padding:0}
+.cal-nav:hover{background:var(--bg2);color:var(--fg)}
+.cal-nav svg{width:12px;height:12px;stroke-width:2;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.cal-dn{font-size:9px;font-weight:600;color:var(--fg3);text-align:center;padding:0 0 5px;letter-spacing:.04em}
+.cal-d{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg2);border-radius:5px;margin:0 auto}
+.cal-d.today{background:var(--p);color:#fff;font-weight:700}
+.cal-d.dim{color:var(--bd2)}
+
+/* ══ v4 MODERNIZATION ═══════════════════════════════════════════ */
+/* — Dark sidebar & brand — */
+.sidenav{background:var(--sn-bg)!important;box-shadow:none!important;border-right:1px solid rgba(255,255,255,.04)!important}
+.tb-brand{background:var(--sn-bg)!important;color:#fff!important}
+.tb-brand em{color:hsl(196 82% 58%)!important}
+.sn-lbl{color:#4a6785!important}
+.nav-link{color:var(--sn-fg)!important;border-radius:var(--r-sm)!important;margin:1px 2px!important}
+.nav-link:hover{background:rgba(255,255,255,.07)!important;color:#fff!important}
+.nav-link.on{background:linear-gradient(135deg,hsl(196 70% 30%) 0%,hsl(196 80% 24%) 100%)!important;color:#fff!important;font-weight:600!important;box-shadow:0 2px 8px rgba(0,0,0,.3)!important}
+.nav-link.on svg,.nav-link:hover svg{color:inherit!important;opacity:1!important}
+.nav-link.dim{opacity:.25!important}
+.sn-div{background:rgba(255,255,255,.08)!important}
+.sn-foot{border-top:1px solid rgba(255,255,255,.08)!important}
+.sn-user:hover{background:rgba(255,255,255,.07)!important}
+.sn-uname{color:#fff!important}
+.sn-uco{color:var(--sn-fg)!important}
+.sidenav .nb{border-radius:99px}
+.sidenav .ns{background:rgba(255,255,255,.10)!important;color:hsl(38 65% 72%)!important;border-color:rgba(255,255,255,.12)!important}
+.sidenav::-webkit-scrollbar{width:4px}
+.sidenav::-webkit-scrollbar-track{background:transparent}
+.sidenav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+/* — Topbar glass — */
+.topbar{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(255,255,255,.92)!important}
+.tb-btn:hover{background:rgba(0,0,0,.06)!important}
+.tb-btn{border-radius:var(--r-sm)}
+/* — Page background & ambient glow — */
+body{background:radial-gradient(ellipse 80vw 70vh at 100% 0%,#d6edf8 0%,#f0f3f7 55%)!important}
+body::before{display:none}
+.body-wrap{background:transparent!important;position:relative;z-index:1}
+/* — Card shadows & radius — */
+.kpi-card{border-top:3px solid var(--p)!important;box-shadow:var(--shadow)!important}
+.side-blk,.act-list,.conv-tab,.card{box-shadow:var(--shadow)!important}
+/* — Typography — */
+.pg-ttl{font-size:22px!important;font-weight:700!important;letter-spacing:-.04em!important}
+/* — Buttons — */
+.btn{transition:all .18s cubic-bezier(.4,0,.2,1)!important}
+.btn-pri:hover{transform:translateY(-1px)!important;box-shadow:0 3px 8px rgba(0,0,0,.18)!important}
+.btn-sec:hover{box-shadow:0 3px 10px rgba(0,0,0,.10)!important}
+/* — Search pill — */
+.tb-search{border-radius:99px!important}
+.tb-search:focus-within{border-color:var(--p);box-shadow:0 0 0 3px var(--pl)}
+/* — Tags & badges: pill — */
+.tag,.ct-open-tag,.ct-arch-badge,.nb{border-radius:99px!important}
+/* — Notification pulse — */
+.tb-dot{animation:dot-pulse 2.4s ease-in-out infinite}
+@keyframes dot-pulse{0%,100%{box-shadow:0 0 0 0 rgba(185,40,40,.4)}50%{box-shadow:0 0 0 4px rgba(185,40,40,0)}}
+/* — Chat glass — */
+.cw{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(248,251,254,.72)!important;border:1px solid rgba(255,255,255,.55)!important;border-radius:12px!important}
+.cw-body{background:rgba(236,241,248,.55)!important}
+.cw-footer{background:rgba(255,255,255,.65)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.cw-head{background:rgba(255,255,255,.8)!important;border-radius:12px 12px 0 0!important}
+.cw-input{border-radius:99px!important}
+.cw-footer{border-radius:0 0 12px 12px!important}
+.cw-info-pop{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(248,251,254,.92)!important;border:1px solid rgba(255,255,255,.6)!important;border-radius:12px 12px 0 0!important;box-shadow:0 -8px 28px rgba(0,0,0,.14)!important}
+/* — Dark mode — */
+[data-theme=dark] .sidenav{background:#07111a!important}
+[data-theme=dark] .tb-brand{background:#07111a!important}
+[data-theme=dark] .topbar{background:rgba(12,12,12,.88)!important}
+[data-theme=dark] body{background:var(--bg2)!important}
+[data-theme=dark] .body-wrap{background:transparent!important}
+[data-theme=dark] .cw{background:rgba(18,18,18,.85)!important}
+/* — Remove grey structural stripes — */
+.filter-bar,.list-footer{background:transparent!important}
+.set-nav{background:transparent!important}
+/* — Company profile & cross-page polish — */
+.co-logo{background:linear-gradient(145deg,var(--g) 0%,hsl(142 55% 30%) 100%)!important;border-radius:10px!important;box-shadow:0 2px 10px rgba(0,0,0,.18)!important}
+.section-card{box-shadow:var(--shadow)!important}
+.sc-head{background:linear-gradient(to bottom,hsl(196 40% 99.5%) 0%,var(--bg) 100%)!important}
+.ofk-v{color:var(--p)!important;font-size:22px!important;letter-spacing:-.04em!important}
+.top5-n{background:var(--pl)!important;border-color:hsl(196 60% 84%)!important;color:var(--p)!important;font-weight:600!important;border-radius:99px!important}
+.top5-item{transition:background .12s}
+.top5-item:hover{background:var(--bg2)!important}
+.cert-badge{background:var(--gl)!important;border-color:hsl(142 40% 82%)!important;color:var(--g)!important}
+.co-tags .tag{background:var(--pl)!important;border-color:hsl(196 55% 84%)!important;color:var(--p)!important}
+.tab-item.on,.anch.on{border-bottom-width:3px!important;font-weight:600!important}
+.pc-wrap{background:transparent!important}
+/* — Settings: nav active pill & toggle depth — */
+.set-nav-item.on{background:var(--pl)!important;color:var(--p)!important;border-left-color:var(--p)!important;font-weight:600!important}
+.toggle{box-shadow:inset 0 1px 3px rgba(0,0,0,.14)!important;border:none!important}
+/* — Invitations: filter tab active teal — */
+.ftab.on{background:var(--pl)!important;color:var(--p)!important;font-weight:600!important}
+/* — Table headers: subtle teal tint — */
+.pend-head,.emp-head,.inv-table-head,.ts-head{background:var(--bg)!important}
+/* — Team: avatar gradient shimmer overlay — */
+.emp-av{position:relative!important;overflow:hidden}
+.emp-av::after{content:'';position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,transparent 58%);pointer-events:none}
+/* — Edit profile: logo gradient — */
+.ep-logo-preview{background:linear-gradient(145deg,var(--p) 0%,var(--pd) 100%)!important;border-radius:10px!important;box-shadow:0 2px 10px rgba(0,0,0,.18)!important}
+/* — Edit profile & onboarding: upload/gallery empty state teal tint — */
+.ep-gal-slot,.ep-doc-slot.empty,.upload-area{border-color:hsl(196 55% 78%)!important;background:var(--pl)!important}
+/* — Accordion open: teal left accent stripe — */
+.acc-item.open>.acc-head{border-left:3px solid var(--p)!important;padding-left:13px!important}
+/* — Selection & polymer chips: pill shape — */
+.check-chip,.poly-chip{border-radius:99px!important}
+.poly-chip.on{background:var(--pl)!important;border-color:var(--p)!important;color:var(--p)!important}
+/* — Onboarding: form-card shadow, step ring — */
+.form-card{box-shadow:var(--shadow)!important}
+.step-item.active .step-num{box-shadow:0 0 0 3px var(--pl)!important}
+/* — Onboarding: step bar alignment fix (two-line labels) — */
+.step-bar{align-items:flex-start!important}
+.step-connector{margin-bottom:0!important;margin-top:13px!important}
+/* — Onboarding: fix radius token mismatch (8px→12px) — */
+:root{--r:12px;--r-sm:6px}
+/* — Admin: section header micro-gradient — */
+.sec-head{background:linear-gradient(to bottom,hsl(196 40% 99.5%) 0%,var(--bg) 100%)!important}
+/* — Form inputs: teal focus ring — */
+.field-input:focus,.field-select:focus{border-color:var(--p)!important;box-shadow:0 0 0 3px var(--pl)!important}
+/* — Dark mode: chat sub-elements — */
+[data-theme=dark] .cw-body{background:rgba(15,20,25,.6)!important}
+[data-theme=dark] .cw-head{background:rgba(12,18,24,.85)!important}
+[data-theme=dark] .cw-footer{background:rgba(12,18,24,.75)!important}
+[data-theme=dark] .cw-row:not(.mine) .cw-bubble{background:rgba(35,45,55,.9)!important;border:1px solid rgba(255,255,255,.07)!important}
+[data-theme=dark] .cw-info-pop{background:rgba(12,18,24,.95)!important;border-color:rgba(255,255,255,.1)!important}
+/* — Dark mode: gradient headers revert to solid — */
+[data-theme=dark] .sc-head,[data-theme=dark] .sec-head{background:var(--bg)!important}
+/* — Dark mode: tinted element border/bg fixes — */
+[data-theme=dark] .top5-n{border-color:hsl(196 60% 22%)!important;background:hsl(196 65% 9%)!important}
+[data-theme=dark] .co-tags .tag{border-color:hsl(196 55% 22%)!important}
+[data-theme=dark] .ep-gal-slot,[data-theme=dark] .ep-doc-slot.empty,[data-theme=dark] .upload-area{border-color:hsl(196 55% 22%)!important;background:hsl(196 65% 7%)!important}
+[data-theme=dark] .cert-badge{border-color:hsl(142 40% 18%)!important;background:hsl(142 40% 7%)!important}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ── -->
+<header class="topbar">
+  <div class="tb-brand">poly<em>Go</em></div>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="Szukaj firm, użytkowników, sygnałów…">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date-grp"><span class="tb-date-txt" id="tbDate"></span><button class="tb-btn" id="calBtn" title="Kalendarz" onclick="tbCalToggle(event)"><svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button></div>
+    <button class="tb-btn" title="Wiadomości" onclick="toggleMsgPanel(event)" style="position:relative;color:var(--p)">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span class="tb-dot"></span>
+    </button>
+    <button class="tb-btn" title="Powiadomienia">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="tb-dot"></span>
+    </button>
+    <a href="08-invitations.html" class="tb-btn" title="Zaproś firmę" style="text-decoration:none">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+    </a>
+    <button class="tb-btn theme-toggle" title="Zmień motyw">
+      <svg class="i-moon" viewBox="0 0 24 24" stroke-width="1.5"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <div class="tb-av">AK</div>
+  </div>
+</header>
+
+<!-- ── SIDE NAV ── -->
+<aside class="sidenav">
+  <div class="sn-sec">
+    <a href="01-dashboard.html" class="nav-link">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Panel główny</span>
+    </a>
+    <a href="02-companies.html" class="nav-link">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-5h6v5"/></svg>
+      <span>Firmy</span>
+    </a>
+    <a href="09-contacts.html" class="nav-link">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Kontakty</span>
+    </a>
+    <a href="#" class="nav-link dim">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+      <span>Sygnały</span>
+      <span class="ns">wkrótce</span>
+    </a>
+    <a href="04-messenger.html" class="nav-link on">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span>Wiadomości</span>
+      <span class="nb">3</span>
+    </a>
+  </div>
+  <div class="sn-div"></div>
+  <div class="sn-sec">
+    <span class="sn-lbl">Moja firma</span>
+    <a href="co-plastiktech.html" class="nav-link">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="7" width="20" height="14"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      <span>Profil firmy</span>
+    </a>
+  </div>
+  <div class="sn-div"></div>
+  <div class="sn-sec">
+    <span class="sn-lbl">Konto</span>
+    <a href="07-settings.html" class="nav-link">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Ustawienia</span>
+    </a>
+    <a href="06-admin.html" class="nav-link">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Panel admina</span>
+    </a>
+  </div>
+  <div class="sn-foot">
+    <div class="sn-user">
+      <div class="tb-av" style="width:26px;height:26px;font-size:10px;flex-shrink:0">AK</div>
+      <div style="min-width:0">
+        <div class="sn-uname">Anna Kowalska</div>
+        <div class="sn-uco">Plastik-Tech Sp. z o.o.</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="body-wrap">
+
+  <!-- Page header -->
+  <div class="page-head">
+    <div>
+      <div class="pg-eye">Wiadomości</div>
+      <h1 class="pg-ttl">Wszystkie rozmowy</h1>
+      <p class="pg-sub">3 nieprzeczytane · 6 aktywnych konwersacji</p>
+    </div>
+    <div class="pg-acts">
+      <button class="btn btn-sec btn-sm" onclick="toggleMsgPanel(event)">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Kontakty
+      </button>
+      <button class="btn btn-pri btn-sm">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Nowa wiadomość
+      </button>
+    </div>
+  </div>
+
+  <div class="pg-content">
+
+    <!-- OTWARTE -->
+    <div class="conv-section">
+      <div class="conv-tab">
+        <div class="conv-sec-hd">
+          <span class="conv-sec-ttl">Otwarte</span>
+          <span class="conv-sec-cnt">3 konwersacje · 2 nieprzeczytane</span>
+        </div>
+        <div class="ct-head">
+          <div>Osoba / Firma</div>
+          <div>Ostatnia wiadomość</div>
+          <div>Czas</div>
+          <div>Status</div>
+        </div>
+
+        <!-- RG: unread x2 -->
+        <div class="ct-row unread" onclick="openChatWin('RG','RecyGran Polska Sp. z o.o.')">
+          <div class="ct-cell">
+            <div class="ct-av" style="background:hsl(160 45% 38%)">JK</div>
+            <div class="ct-info">
+              <div class="ct-person">Joanna Krawczyk</div>
+              <div class="ct-co">RecyGran Polska Sp. z o.o.</div>
+            </div>
+          </div>
+          <div class="ct-preview">Kiedy możliwy odbiór? Potrzebuję potwierdzenia do…</div>
+          <div class="ct-time">14:22</div>
+          <div class="ct-status">
+            <div class="ct-unread">2</div>
+            <span class="ct-open-tag">Otwarta</span>
+          </div>
+        </div>
+
+        <!-- EC: unread x1 -->
+        <div class="ct-row unread" onclick="openChatWin('EC','EcoPlas Sp. z o.o.')">
+          <div class="ct-cell">
+            <div class="ct-av" style="background:hsl(142 45% 38%)">MW</div>
+            <div class="ct-info">
+              <div class="ct-person">Marek Wiśniewski</div>
+              <div class="ct-co">EcoPlas Sp. z o.o.</div>
+            </div>
+          </div>
+          <div class="ct-preview">Szukamy regularnych dostaw odpadów HDPE z folii.</div>
+          <div class="ct-time">11:05</div>
+          <div class="ct-status">
+            <div class="ct-unread">1</div>
+            <span class="ct-open-tag">Otwarta</span>
+          </div>
+        </div>
+
+        <!-- KT: no unread -->
+        <div class="ct-row" onclick="openChatWin('KT','KompoundTech Sp. z o.o.')">
+          <div class="ct-cell">
+            <div class="ct-av" style="background:hsl(220 55% 38%)">TB</div>
+            <div class="ct-info">
+              <div class="ct-person">Tomasz Bąk</div>
+              <div class="ct-co">KompoundTech Sp. z o.o.</div>
+            </div>
+          </div>
+          <div class="ct-preview">Potwierdzam odbiór dokumentów. Dziękuję za sprawną…</div>
+          <div class="ct-time">wt</div>
+          <div class="ct-status">
+            <span class="ct-open-tag">Otwarta</span>
+          </div>
+        </div>
+
+      </div><!-- /conv-tab -->
+    </div><!-- /conv-section -->
+
+    <!-- ARCHIWUM -->
+    <div class="conv-section">
+      <div class="conv-tab arch">
+        <div class="conv-sec-hd">
+          <span class="conv-sec-ttl">Archiwum</span>
+          <span class="conv-sec-cnt">3 konwersacje</span>
+        </div>
+        <div class="ct-head">
+          <div>Osoba / Firma</div>
+          <div>Ostatnia wiadomość</div>
+          <div>Czas</div>
+          <div>Status</div>
+        </div>
+
+        <!-- PF -->
+        <div class="ct-row" onclick="openChatWin('PF','PolyForm Industries Sp. z o.o.')">
+          <div class="ct-cell">
+            <div class="ct-av" style="background:hsl(240 42% 50%)">RD</div>
+            <div class="ct-info">
+              <div class="ct-person">Robert Dąbrowski</div>
+              <div class="ct-co">PolyForm Industries Sp. z o.o.</div>
+            </div>
+          </div>
+          <div class="ct-preview">Oferta przesłana, czekamy na decyzję.</div>
+          <div class="ct-time">pon</div>
+          <div class="ct-status"><span class="ct-arch-badge">Archiwum</span></div>
+        </div>
+
+        <!-- AP -->
+        <div class="ct-row" onclick="openChatWin('AP','AluPet Polska S.A.')">
+          <div class="ct-cell">
+            <div class="ct-av" style="background:hsl(220 50% 44%)">PM</div>
+            <div class="ct-info">
+              <div class="ct-person">Piotr Malinowski</div>
+              <div class="ct-co">AluPet Polska S.A.</div>
+            </div>
+          </div>
+          <div class="ct-preview">Dziękujemy za zainteresowanie. Skontaktujemy się wkrótce.</div>
+          <div class="ct-time">24 cz</div>
+          <div class="ct-status"><span class="ct-arch-badge">Archiwum</span></div>
+        </div>
+
+        <!-- RP -->
+        <div class="ct-row" onclick="openChatWin('RP','RecyPol S.A.')">
+          <div class="ct-cell">
+            <div class="ct-av" style="background:hsl(142 38% 34%)">JK</div>
+            <div class="ct-info">
+              <div class="ct-person">Joanna Krawczyk</div>
+              <div class="ct-co">RecyPol S.A.</div>
+            </div>
+          </div>
+          <div class="ct-preview">Karta technologiczna PET w załączniku. Proszę potwierdzić.</div>
+          <div class="ct-time">19 cz</div>
+          <div class="ct-status"><span class="ct-arch-badge">Archiwum</span></div>
+        </div>
+
+      </div><!-- /conv-tab.arch -->
+    </div><!-- /conv-section -->
+
+  </div><!-- /pg-content -->
+</div><!-- /body-wrap -->
+
+<!-- ── CONTACTS RIGHT PANEL ── -->
+<div class="msg-panel" id="msgPanel">
+  <div class="mp-head">
+    <span class="mp-ttl">Kontakty</span>
+    <button class="mp-close" onclick="toggleMsgPanel(event)">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="mp-search">
+    <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input placeholder="Szukaj kontaktów…">
+  </div>
+  <div class="mp-list">
+    <div class="mp-item" onclick="openChatWin('RG','RecyGran Polska Sp. z o.o.')">
+      <div class="mp-av">RG</div>
+      <div class="mp-body"><div class="mp-name">Joanna Krawczyk</div><div class="mp-sub">RecyGran Polska Sp. z o.o.</div></div>
+      <span class="mp-open-tag">Otwarta</span>
+    </div>
+    <div class="mp-item" onclick="openChatWin('EC','EcoPlas Sp. z o.o.')">
+      <div class="mp-av">EC</div>
+      <div class="mp-body"><div class="mp-name">Marek Wiśniewski</div><div class="mp-sub">EcoPlas Sp. z o.o.</div></div>
+      <span class="mp-open-tag">Otwarta</span>
+    </div>
+    <div class="mp-item" onclick="openChatWin('KT','KompoundTech Sp. z o.o.')">
+      <div class="mp-av">KT</div>
+      <div class="mp-body"><div class="mp-name">Tomasz Bąk</div><div class="mp-sub">KompoundTech Sp. z o.o.</div></div>
+      <span class="mp-open-tag">Otwarta</span>
+    </div>
+    <div class="mp-item" onclick="openChatWin('PF','PolyForm Industries Sp. z o.o.')">
+      <div class="mp-av">PF</div>
+      <div class="mp-body"><div class="mp-name">Robert Dąbrowski</div><div class="mp-sub">PolyForm Industries Sp. z o.o.</div></div>
+    </div>
+    <div class="mp-item" onclick="openChatWin('AP','AluPet Polska S.A.')">
+      <div class="mp-av">AP</div>
+      <div class="mp-body"><div class="mp-name">Piotr Malinowski</div><div class="mp-sub">AluPet Polska S.A.</div></div>
+    </div>
+    <div class="mp-item" onclick="openChatWin('RP','RecyPol S.A.')">
+      <div class="mp-av">RP</div>
+      <div class="mp-body"><div class="mp-name">Joanna Krawczyk</div><div class="mp-sub">RecyPol S.A.</div></div>
+    </div>
+    <div class="mp-item" onclick="openChatWin('SP','SynthetPlast S.A.')">
+      <div class="mp-av">SP</div>
+      <div class="mp-body"><div class="mp-name">Katarzyna Nowak</div><div class="mp-sub">SynthetPlast S.A.</div></div>
+    </div>
+    <div class="mp-item" onclick="openChatWin('GE','GranulatEx Sp. z o.o.')">
+      <div class="mp-av">GE</div>
+      <div class="mp-body"><div class="mp-name">Handlowiec</div><div class="mp-sub">GranulatEx Sp. z o.o.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FLOATING CHAT TRAY ── -->
+<div class="conv-tray" id="convTray"></div>
+<div class="conv-mini-dock" id="convDock"></div>
+
+<!-- ── DEMO BAR ── -->
+<div class="demo-bar">
+  <span class="dm-mark">DEMO</span>
+  <a href="01-dashboard.html" class="dm-lnk">Dashboard</a>
+  <a href="02-companies.html" class="dm-lnk">Firmy</a>
+  <a href="09-contacts.html" class="dm-lnk">Kontakty</a>
+  <a href="co-recypol.html" class="dm-lnk">RecyPol</a>
+  <a href="co-plastiktech.html" class="dm-lnk">Plastik-Tech</a>
+  <a href="co-ecoplas.html" class="dm-lnk">EcoPlas</a>
+  <a href="co-kompound.html" class="dm-lnk">KompoundTech</a>
+  <a href="04-messenger.html" class="dm-lnk on">Wiadomości</a>
+  <a href="05-onboarding.html" class="dm-lnk">Rejestracja</a>
+  <a href="06-admin.html" class="dm-lnk">Admin</a>
+  <a href="07-settings.html" class="dm-lnk">Ustawienia</a>
+  <a href="08-invitations.html" class="dm-lnk">Zaproszenia</a>
+  <a href="10-team.html" class="dm-lnk">Zespół</a>
+  <a href="10-edit-profile.html" class="dm-lnk">Edytuj profil</a>
+</div>
+
+<script>
+(function(){
+  var h=document.documentElement;
+  var s=localStorage.getItem('pg-theme');
+  if(s) h.setAttribute('data-theme',s);
+  document.querySelector('.theme-toggle').addEventListener('click',function(){
+    var t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+    h.setAttribute('data-theme',t);
+    localStorage.setItem('pg-theme',t);
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var colorMap={
+    'RG':'hsl(160 45% 38%)','EC':'hsl(142 45% 38%)','KT':'hsl(220 55% 38%)',
+    'PF':'hsl(240 42% 50%)','AP':'hsl(220 50% 44%)','RP':'hsl(142 38% 34%)',
+    'SP':'hsl(200 52% 42%)','GE':'hsl(270 42% 48%)'
+  };
+  document.querySelectorAll('.mp-item[onclick]').forEach(function(item){
+    var m=(item.getAttribute('onclick')||'').match(/'([A-Z]{2,3})'/);
+    if(m&&colorMap[m[1]]){
+      var av=item.querySelector('.mp-av');
+      if(av){av.style.background=colorMap[m[1]];av.style.color='#fff';}
+    }
+  });
+  var contactMap={
+    'RG':'Joanna Krawczyk','EC':'Marek Wiśniewski','KT':'Tomasz Bąk',
+    'PF':'Robert Dąbrowski','AP':'Piotr Malinowski','RP':'Joanna Krawczyk',
+    'SP':'Katarzyna Nowak','GE':'Handlowiec'
+  };
+  var companyInfo={
+    'RG':{type:'Recykler',city:'Gdańsk'},'EC':{type:'Recykler',city:'Wrocław'},
+    'KT':{type:'Compounder',city:'Poznań'},'PF':{type:'Producent',city:'Łódź'},
+    'AP':{type:'Producent',city:'Kraków'},'RP':{type:'Recykler',city:'Gliwice'},
+    'SP':{type:'Producent',city:'Warszawa'},'GE':{type:'Trader',city:'Katowice'}
+  };
+  var defaultMsgs={
+    'RG':[
+      {t:'Dzień dobry, chciałabym zapytać o dostępność regranulatu PP w kolorze naturalnym. Ilość ok. 5 ton.',mine:false,ts:'13:44'},
+      {t:'Dzień dobry, tak, mamy w tej chwili dostępne wolne moce. Jakie są wymagania co do MFI?',mine:true,ts:'14:02'},
+      {t:'MFI 12–20 g/10min przy 230°C/2,16 kg. Kiedy możliwy odbiór? Potrzebuję potwierdzenia.',mine:false,ts:'14:18'},
+      {t:'Odbiór możliwy od przyszłego tygodnia. Prześlę kartę techniczną i specyfikację partii.',mine:true,ts:'14:22'}
+    ],
+    'EC':[
+      {t:'Witam, szukamy regularnych dostaw odpadów HDPE z folii. Czy możecie obsługiwać ok. 20 t/miesiąc?',mine:false,ts:'10:58'},
+      {t:'Cześć, tak, to jesteśmy w stanie obsłużyć. Potrzebuję więcej info o formie odpadów — czy to bele czy luz?',mine:true,ts:'11:05'}
+    ],
+    'KT':[
+      {t:'Potwierdzam odbiór dokumentów. Dziękuję za sprawną realizację.',mine:false,ts:'15:30'},
+      {t:'Dziękujemy za współpracę, proszę o sygnał gdy będzie potrzebny kolejny transport.',mine:true,ts:'15:45'}
+    ],
+    'PF':[{t:'Oferta przesłana, czekamy na odpowiedź.',mine:true,ts:'10:02'}],
+    'AP':[{t:'Dziękujemy za zainteresowanie. Skontaktujemy się wkrótce.',mine:true,ts:'09:15'}],
+    'RP':[{t:'Karta technologiczna PET w załączniku. Proszę potwierdzić.',mine:false,ts:'08:30'}],
+    'SP':[],'GE':[]
+  };
+  var phoneMap={
+    'AP':'+48 12 345 67 89','EC':'+48 71 456 89 23','GE':'+48 32 678 90 12',
+    'KT':'+48 61 789 12 34','PF':'+48 42 234 56 78','RG':'+48 58 321 44 71',
+    'RP':'+48 32 456 78 90','SP':'+48 22 567 89 01'
+  };
+  var companyDetails={
+    'AP':{nip:'PL 678-500-55-66',city:'Kraków',region:'małopolskie',status:'Zweryfikowana',fullName:'AluPet Polska S.A.',type:'Producent'},
+    'EC':{nip:'PL 895-200-11-22',city:'Wrocław',region:'dolnośląskie',status:'Zweryfikowana',fullName:'EcoPlas Sp. z o.o.',type:'Recykler'},
+    'GE':{nip:'PL 643-700-77-88',city:'Katowice',region:'śląskie',status:'Zweryfikowana',fullName:'GranulatEx Sp. z o.o.',type:'Trader'},
+    'KT':{nip:'PL 781-300-33-44',city:'Poznań',region:'wielkopolskie',status:'Zweryfikowana',fullName:'KompoundTech Sp. z o.o.',type:'Compounder'},
+    'PF':{nip:'PL 712-400-44-55',city:'Łódź',region:'łódzkie',status:'Zweryfikowana',fullName:'PolyForm Industries Sp. z o.o.',type:'Producent'},
+    'RG':{nip:'PL 550-100-22-33',city:'Gdańsk',region:'pomorskie',status:'Zweryfikowana',fullName:'RecyGran Polska Sp. z o.o.',type:'Recykler'},
+    'RP':{nip:'PL 626-111-22-33',city:'Gliwice',region:'śląskie',status:'Zweryfikowana',fullName:'RecyPol S.A.',type:'Recykler'},
+    'SP':{nip:'PL 524-600-66-77',city:'Warszawa',region:'mazowieckie',status:'Zweryfikowana',fullName:'SynthetPlast S.A.',type:'Producent'}
+  };
+  var MAX_OPEN=3;
+
+  window.toggleMsgPanel=function(e){
+    if(e) e.preventDefault();
+    document.documentElement.classList.toggle('panel-open');
+    document.getElementById('msgPanel').classList.toggle('open');
+  };
+
+  window.cwInfoToggle=function(initials){
+    var win=document.getElementById('cw-'+initials);
+    if(!win) return;
+    var existing=win.querySelector('.cw-info-pop');
+    if(existing){existing.remove();return;}
+    var cd=companyDetails[initials]||{};
+    var color=colorMap[initials]||'var(--p)';
+    var pop=document.createElement('div');
+    pop.className='cw-info-pop';
+    pop.innerHTML=
+      '<div class="cw-ip-head">'+
+        '<div class="cw-ip-av" style="background:'+color+'">'+initials+'</div>'+
+        '<div style="flex:1;min-width:0"><div class="cw-ip-name">'+(cd.fullName||initials)+'</div><div class="cw-ip-type">'+(cd.type||'')+'</div></div>'+
+        '<button class="cw-ip-star" onclick="this.classList.toggle(\'on\')"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>'+
+      '</div>'+
+      (cd.city?'<div class="cw-ip-row"><span class="cw-ip-k">Lokalizacja</span><span class="cw-ip-v">'+cd.city+(cd.region?', '+cd.region:'')+'</span></div>':'')+
+      (cd.nip?'<div class="cw-ip-row"><span class="cw-ip-k">NIP</span><span class="cw-ip-v">'+cd.nip+'</span></div>':'')+
+      (cd.status?'<div class="cw-ip-row"><span class="cw-ip-k">Status</span><span class="cw-ip-v">'+cd.status+'</span></div>':'')+
+      '<div class="cw-ip-row"><span class="cw-ip-k">Profil</span><span class="cw-ip-v" style="color:var(--p);cursor:pointer">Zobacz firmę →</span></div>';
+    win.appendChild(pop);
+    pop.addEventListener('click',function(e){e.stopPropagation();});
+  };
+
+  window.openChatWin=function(initials,name){
+    var tray=document.getElementById('convTray');
+    var dock=document.getElementById('convDock');
+    var existing=document.getElementById('cw-'+initials);
+    if(existing){
+      if(existing.parentNode===dock){
+        var open=Array.from(tray.children);
+        while(open.length>=MAX_OPEN){dock.appendChild(open.shift());}
+        tray.appendChild(existing);
+      }
+      scrollCw(initials);
+      return;
+    }
+    var open=Array.from(tray.children);
+    while(open.length>=MAX_OPEN){dock.appendChild(open.shift());}
+    var color=colorMap[initials]||'var(--p)';
+    var contact=contactMap[initials]||initials;
+    var phone=phoneMap[initials]||'';
+    var msgs=defaultMsgs[initials]||[];
+    var bubbles=msgs.map(function(m){
+      return '<div class="cw-row'+(m.mine?' mine':'')+'">'+
+        '<div class="cw-bav">'+(m.mine?'AK':initials)+'</div>'+
+        '<div class="cw-bubble">'+m.t+'</div>'+
+        '<span class="cw-ts">'+m.ts+'</span>'+
+      '</div>';
+    }).join('');
+    var win=document.createElement('div');
+    win.className='cw';
+    win.id='cw-'+initials;
+    win.style.setProperty('--cw-color',color);
+    win.innerHTML=
+      '<div class="cw-head" onclick="cwToggle(\''+initials+'\')">'+
+        '<div class="cw-head-row">'+
+          '<div class="cw-logo">'+initials+'</div>'+
+          '<div class="cw-info">'+
+            '<div class="cw-cname"><span class="cw-online"></span>'+contact+'<button class="cw-infolink" onclick="event.stopPropagation();cwInfoToggle(\''+initials+'\')" title="Dane firmy"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/><rect x="11" y="8" width="2" height="2.5" rx="1" fill="white"/><rect x="11" y="11.5" width="2" height="5" rx="1" fill="white"/></svg></button></div>'+
+            '<div class="cw-cco">'+name+'</div>'+
+            (phone?'<div class="cw-cph">'+phone+'</div>':'')+
+          '</div>'+
+          '<div class="cw-acts">'+
+          '<button class="cw-btn" id="cwmin-'+initials+'" onclick="event.stopPropagation();cwToggle(\''+initials+'\')" title="Minimalizuj">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>'+
+          '</button>'+
+          '<button class="cw-btn" onclick="event.stopPropagation();document.getElementById(\'cw-'+initials+'\').remove()" title="Zamknij">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'+
+          '</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="cw-body" id="cwb-'+initials+'">'+
+        (bubbles||'<div class="cw-empty">Brak wcześniejszych wiadomości<br>Napisz jako pierwszy!</div>')+
+      '</div>'+
+      '<div class="cw-footer">'+
+        '<div class="cw-fl">'+
+          '<button class="cw-icon-btn" title="Załącznik" onclick="event.stopPropagation()">'+
+            '<svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>'+
+          '</button>'+
+          '<button class="cw-icon-btn cw-dots" title="Więcej" onclick="event.stopPropagation()">'+
+            '<svg class="cw-dots-svg" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'+
+          '</button>'+
+        '</div>'+
+        '<input class="cw-input" id="cwi-'+initials+'" placeholder="Napisz wiadomość…" '+
+          'onkeydown="if(event.key===\'Enter\'&&this.value.trim()){cwSend(\''+initials+'\');event.preventDefault()}">'+
+        '<button class="cw-send" onclick="cwSend(\''+initials+'\')">'+
+          '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>'+
+        '</button>'+
+      '</div>';
+    tray.appendChild(win);
+    scrollCw(initials);
+  };
+
+  window.cwToggle=function(initials){
+    var tray=document.getElementById('convTray');
+    var dock=document.getElementById('convDock');
+    var win=document.getElementById('cw-'+initials);
+    if(!win) return;
+    var btn=document.getElementById('cwmin-'+initials);
+    if(win.parentNode===dock){
+      var open=Array.from(tray.children);
+      while(open.length>=MAX_OPEN){dock.appendChild(open.shift());}
+      tray.appendChild(win);
+      if(btn) btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    } else {
+      dock.appendChild(win);
+      if(btn) btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>';
+    }
+    scrollCw(initials);
+  };
+
+  window.cwSend=function(initials){
+    var inp=document.getElementById('cwi-'+initials);
+    if(!inp||!inp.value.trim()) return;
+    var body=document.getElementById('cwb-'+initials);
+    var row=document.createElement('div');
+    row.className='cw-row mine';
+    row.innerHTML='<div class="cw-bav">AK</div>'+
+      '<div class="cw-bubble">'+inp.value+'</div>';
+    body.appendChild(row);
+    inp.value='';
+    scrollCw(initials);
+  };
+
+  function scrollCw(initials){var b=document.getElementById('cwb-'+initials);if(b) b.scrollTop=b.scrollHeight;}
+})();
+</script>
+
+<script>
+(function(){
+  var MN=['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+  var MS=['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+  var DN=['Pn','Wt','Śr','Cz','Pt','So','Nd'];
+  var calY,calM;
+  var d0=new Date(); calY=d0.getFullYear(); calM=d0.getMonth();
+  var el=document.getElementById('tbDate');
+  if(el) el.textContent=d0.getDate()+' '+MS[calM]+' '+calY;
+  function buildCal(y,m){
+    var td=new Date();
+    var first=new Date(y,m,1).getDay();
+    var off=(first===0)?6:first-1;
+    var dim=new Date(y,m+1,0).getDate();
+    var dprev=new Date(y,m,0).getDate();
+    var h='<div class="cal-head">'+
+      '<button class="cal-nav" onclick="tbCalNav(-1,event)"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'+
+      '<span class="cal-month">'+MN[m]+' '+y+'</span>'+
+      '<button class="cal-nav" onclick="tbCalNav(1,event)"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>'+
+      '</div><div class="cal-grid">';
+    DN.forEach(function(n){h+='<div class="cal-dn">'+n+'</div>';});
+    for(var i=off-1;i>=0;i--) h+='<div class="cal-d dim">'+(dprev-i)+'</div>';
+    for(var d=1;d<=dim;d++){
+      var isTd=d===td.getDate()&&m===td.getMonth()&&y===td.getFullYear();
+      h+='<div class="cal-d'+(isTd?' today':'')+'">'+d+'</div>';
+    }
+    var rem=(7-((off+dim)%7))%7;
+    for(var n=1;n<=rem;n++) h+='<div class="cal-d dim">'+n+'</div>';
+    return h+'</div>';
+  }
+  window.tbCalToggle=function(e){
+    e.stopPropagation();
+    var ex=document.getElementById('calPop');
+    if(ex){ex.remove();return;}
+    var btn=document.getElementById('calBtn');
+    var r=btn.getBoundingClientRect();
+    var pop=document.createElement('div');
+    pop.id='calPop'; pop.className='cal-pop';
+    pop.style.top=(r.bottom+4)+'px';
+    pop.style.right=(window.innerWidth-r.right)+'px';
+    pop.innerHTML=buildCal(calY,calM);
+    document.body.appendChild(pop);
+  };
+  window.tbCalNav=function(dir,e){if(e)e.stopPropagation();
+    calM+=dir;
+    if(calM>11){calM=0;calY++;} if(calM<0){calM=11;calY--;}
+    var pop=document.getElementById('calPop');
+    if(pop) pop.innerHTML=buildCal(calY,calM);
+  };
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('#calPop')&&!e.target.closest('#calBtn')){
+      var p=document.getElementById('calPop'); if(p) p.remove();
+    }
+  });
+})();
+</script>
+</body>
+</html>
